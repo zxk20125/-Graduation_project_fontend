@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/aop
+    http://www.springframework.org/schema/aop/spring-aop.xsd
+    http://www.springframework.org/schema/tx
+    http://www.springframework.org/schema/tx/spring-tx.xsd
+    ">
+    
+    <!-- 配置包扫描位置 -->
+    <context:component-scan base-package="cn.zxk.controller"/>
+	<context:component-scan base-package="cn.zxk.service"/>
+    
+    
+    <!-- 读取db.properties配置文件 -->
+    <context:property-placeholder location="classpath:db.properties"/>
+    
+    <!-- 配置数据源（druid连接池） -->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init"
+    	destroy-method="close"
+    >
+    	<property name="driverClassName" value="${jdbc.driverClassName}"/>
+    	<property name="url" value="${jdbc.url}"/>
+    	<property name="username" value="${jdbc.username}"/>
+    	<property name="password" value="${jdbc.password}"/>
+    	<property name="maxActive" value="${jdbc.maxActive}"/>
+    </bean>
+    
+    
+    <!-- 配置org.mybatis.spring.SqlSessionFactoryBean 创建出SqlSessionFactory对象 -->
+    
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+    	<!-- 1.注入数据源（连接池） -->
+    	<property name="dataSource" ref="dataSource"/>
+    	
+    	<!-- 2.别名的配置,使用包扫描 -->
+    	<property name="typeAliasesPackage" value="cn.zxk.pojo"/>
+    	
+    	<!-- 3.配置映射文件 -->
+    	<property name="mapperLocations">
+    		<array>
+    			<!-- 使用通配符* 配置所有的映射文件 -->
+    			<value>classpath:cn/zxk/mapper/*Mapper.xml</value>
+    		</array>
+    	</property>
+    	
+    	<!-- 4.读取mybatis-config.xml 非核心（日志，缓存配置）配置需要在这个配置文件配置 -->
+    	<property name="configLocation" value="classpath:mybatis-config.xml"/>
+    </bean>
+    
+ 
+    <!-- 接口开发,扫描 com.itheima.core.dao包 ，写在此包下的接口即可被扫描到 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="cn.zxk.mapper" />
+	</bean>
+	
+
+	<!-- 配置事务管理器  ： what-->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<!-- 注入数据源 -->
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+	
+	<!-- 配置事务管理:通知，增强（when） -->
+	<tx:advice id="txAdvice">
+		<tx:attributes>
+			<!-- 所有查询方法都是只读事务 -->
+			<tx:method name="get*" read-only="true" propagation="REQUIRED"/>
+			<tx:method name="select*" read-only="true"/>
+			<tx:method name="find*" read-only="true"/>
+			<tx:method name="query*" read-only="true"/>
+			<tx:method name="list*" read-only="true"/>
+			<tx:method name="jiedan" propagation="REQUIRED" />
+			<!-- dml 操作非只读事物 -->
+			<tx:method name="*" read-only="false"/>
+		</tx:attributes>
+	</tx:advice>
+	
+	<!-- 配置aop切入事务 -->
+	<aop:config>
+		<!-- 配置切入点 ： where-->
+		<aop:pointcut expression="execution(* cn.zxk.service..*.*(..))" id="pt"/>
+		
+		<!-- 配置切面 ： 切面= 切入点+通知 -->
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="pt"/>
+		
+		<!-- 织入，交给Spring完成 -->
+	</aop:config>
+</beans>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
