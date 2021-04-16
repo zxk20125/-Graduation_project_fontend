@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+ <!-- 根标签，在内部配置MyBatis框架信息 -->
+<configuration>
+	
+	<!-- MyBatis的其他设置（日志框架的设置，缓存等等） -->
+	<settings>
+		 <!-- 开启二级缓存 -->
+		 <setting name="cacheEnabled" value="true"/>
+	
+		 <setting name="logImpl" value="LOG4J"/>
+	</settings>
+</configuration>
